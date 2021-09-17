@@ -1,0 +1,451 @@
+**接口文档说明 v 1.1**
+
+**变更记录**
+
+##### 1.获取身份令牌
+
+URL: http://cas.api.smallgod.vip/api/users/login
+
+Method：POST
+
+Content-Type:application/x-www-form-urlencoded
+
+请求参数
+
+| 参数       | 类型   | 描述                     |
+| :--------- | :----- | :----------------------- |
+| grant_type | string | 固定值：password         |
+| username   | string | 登录账号，开户时系统分发 |
+| password   | string | 登录密码，开户时系统分发 |
+
+eg:
+
+```
+{
+	grant_type:password,
+	username:13918888888,
+    password:1615235534912
+ 
+}
+```
+
+返回值
+
+成功：
+
+```
+{
+	"access_token": "uMvrA8rjkLMip3cSGg3H_WzbWtYTQWZ75gUKxhBZ7grWxsJITpsziOY-7W1zggt_cx19POC26Nsqdxws5V2SxPNJS5KNOXxZQ79WYQ0XUA837FQxXeGQJQuz4k1lPc1-2Zwynz2u6LgHK2C72_L77Xt5UOJPhg9j-LFXfr2c4YvoHrPD9YrhYSJyPs5pw6vKFmyKpD2jC9Pt5ba6I1oiRw",
+	"token_type": "bearer",
+	"expires_in": 86329
+}
+```
+
+错误：
+
+```
+{
+	"error": "invalid_grant",
+	"error_description": "手机号或密码错误"
+}
+```
+
+2.获取H5微信小程序支付链接
+
+URL: http://cas.api.smallgod.vip/api/Pay/Transactions
+
+Method：POST
+
+Content-Type:application/json
+
+请求参数
+
+Header:
+
+| 参数          | 类型   | 描述     |
+| ------------- | ------ | -------- |
+| Authorization | string | 身份令牌 |
+
+eg：
+
+```
+Authorization：bearer uMvrA8rjkLMip3cSGg3H_WzbWtYTQWZ75gUKxhBZ7grWxsJITpsziOY-7W1zggt_cx19POC26Nsqdxws5V2SxPNJS5KNOXxZQ79WYQ0XUA837FQxXeGQJQuz4k1lPc1-2Zwynz2u6LgHK2C72_L77Xt5UOJPhg9j-LFXfr2c4YvoHrPD9YrhYSJyPs5pw6vKFmyKpD2jC9Pt5ba6I1oiRw
+```
+
+Body
+
+| 参数        | 类型       | 描述                                                         |
+| :---------- | :--------- | :----------------------------------------------------------- |
+| money       | INT        | 交易金额，单位（分）                                         |
+| orderno     | string(32) | 随机字符串，不长于32位。                                     |
+| paytype     | INT        | 请求交易的业务场景，1：micapp 获取支付link，2：native，3：app，4：micropay，条码支付（列：1：唤起微信支付，2：获取微信收款二维码） |
+| channeltype | INT        | 客户端，1：微信；2：支付宝                                   |
+| IP          | string     | 用户身份标识                                                 |
+| Signature   | string(32) | Body请求参数，按照key=value的格式，并按照参数名ASCII字典序排序，最后拼接Key,进行MD5大写加密。 |
+
+eg:
+
+```
+{
+    "money":20000,     
+    "paytype":1,
+    "channeltype":1,
+    "IP"："",
+    "orderno":"16581233521581215441",
+    "Signature":"5S1Q41S2WWK254S52SD45S1Q41S1Q41S2WW"
+}
+```
+
+返回值
+
+成功：
+
+```
+{
+	"Code": "0000",
+	"Msg": "OK",
+	"Data": "weixin://dl/business/?t=UYdqxrpNWRl"
+}
+```
+
+失败：
+
+```
+{
+	"Code": "1000",
+	"Msg": "不合法的交易",
+	"Data": ""
+}
+```
+
+
+
+3：条码支付
+
+URL: http://cas.api.smallgod.vip/api/Pay/Transactions
+
+Method：POST
+
+Content-Type:application/json
+
+请求参数
+
+Header:
+
+| 参数          | 类型   | 描述     |
+| ------------- | ------ | -------- |
+| Authorization | string | 身份令牌 |
+
+eg：
+
+```
+Authorization：bearer uMvrA8rjkLMip3cSGg3H_WzbWtYTQWZ75gUKxhBZ7grWxsJITpsziOY-7W1zggt_cx19POC26Nsqdxws5V2SxPNJS5KNOXxZQ79WYQ0XUA837FQxXeGQJQuz4k1lPc1-2Zwynz2u6LgHK2C72_L77Xt5UOJPhg9j-LFXfr2c4YvoHrPD9YrhYSJyPs5pw6vKFmyKpD2jC9Pt5ba6I1oiRw
+```
+
+Body
+
+| 参数        | 类型       | 描述                                                         |
+| :---------- | :--------- | :----------------------------------------------------------- |
+| money       | INT        | 交易金额，单位（分）                                         |
+| orderno     | string(28) | 随机字符串，不长于28位。                                     |
+| paytype     | INT        | 请求交易的业务场景，1：获取支付link，2：native，3：app，4：预交易订单号，5，条码支付（列：1：唤起微信支付，2：获取微信收款二维码） |
+| channeltype | INT        | 客户端，1：微信；2：支付宝                                   |
+| Signature   | string(32) | Body请求参数，按照key=value的格式，并按照参数名ASCII字典序排序，最后拼接Key,进行MD5大写加密。 |
+| merchantNo  | [INT]      | 请求支付的商户列表,可为空，此字段为空时编号由系统分发。      |
+| payid       | [INT]      | 支付公司列表,可为空，此字段为空时编号由系统分发。            |
+| auth_code   | string     | 条码，不可为空                                               |
+| goods_des   | string     | 商品描述,不长于128位，不可为空                               |
+| addn_inf    | string     | 自定义数据，可为空                                           |
+
+eg:
+
+```
+{
+     "money":"1000",
+     "paytype":"5", 
+     "channeltype":"2",
+     "orderno":"37132600000010"
+     "auth_code":"283080406962174122",
+     "merchantNo":[1005],
+     "payid":[1001],
+     "goods_des":"37132600000005",
+     "addn_inf":"37132600000005"
+}
+```
+
+返回值
+
+
+
+| 参数                    | 类型   | 描述                         |
+| :---------------------- | :----- | :--------------------------- |
+| Code                    | string | 状态：成功："0000"，其他失败 |
+| Msg                     | string | 返回消息                     |
+| addn_inf                | string | 自定义信息                   |
+| reserved_mchnt_order_no | string | 商户订单号                   |
+| reserved_fy_order_no    | string | 富友生成的订单号。           |
+| O_TransactionNumber     | string | 交易流水号。                 |
+| order_amt               | int    | 交易金额                     |
+
+成功
+
+```
+{
+	"Code": "0000",
+	"Msg": "SUCCESS",
+	"addn_inf": "37132600000005",
+	"reserved_fy_order_no": "",
+	"O_OrderNO": "37132600000010",
+	"reserved_mchnt_order_no": "177837132600000010",
+	"O_TransactionNumber": "2021072722001402221456609785"
+}
+```
+
+失败
+
+
+
+```
+ {
+   Code = "1000",
+   Msg = "订单号重复",
+   Data = ""
+ }
+```
+
+4：订单查询
+
+URL: http://cas.api.smallgod.vip/api/Orders/OrderList
+
+Method：POST
+
+Content-Type:application/json
+
+请求参数
+
+Header:
+
+| 参数          | 类型   | 描述     |
+| ------------- | ------ | -------- |
+| Authorization | string | 身份令牌 |
+
+eg：
+
+```
+Authorization：bearer uMvrA8rjkLMip3cSGg3H_WzbWtYTQWZ75gUKxhBZ7grWxsJITpsziOY-7W1zggt_cx19POC26Nsqdxws5V2SxPNJS5KNOXxZQ79WYQ0XUA837FQxXeGQJQuz4k1lPc1-2Zwynz2u6LgHK2C72_L77Xt5UOJPhg9j-LFXfr2c4YvoHrPD9YrhYSJyPs5pw6vKFmyKpD2jC9Pt5ba6I1oiRw
+```
+
+Body
+
+| 参数          | 类型   | 描述                                              |
+| :------------ | :----- | :------------------------------------------------ |
+| companyname   | string | 到账账户企业名称,可为空                           |
+| orderno       | string | 订单号，可为空                                    |
+| StartDateTime | string | 起始时间，可为空                                  |
+| EndDateTime   | string | 截至时间，可为空                                  |
+| status        | string | 订单状态，-1：失败，0：未支付，1：成功，2：待确认 |
+| index         | int    | 页码，默认：1                                     |
+
+eg:
+
+```
+{
+    "companyname":"鑫龙达",
+    "orderno":"2021072916240762505618321532",
+    "StartDateTime":"2021-07-29 00:00:00",
+    "EndDateTime":"2021-07-29 23:59:59",
+    "status":"1",
+    "index":"1"
+}
+```
+
+返回值
+
+| 参数                | 类型     | 描述                                              |
+| :------------------ | :------- | :------------------------------------------------ |
+| Code                | string   | 状态码，0000为成功，其他为失败                    |
+| Msg                 | string   | 返回信息                                          |
+| Count               | INT      | 符合查询条件的订单总条数                          |
+| Pagesize            | INT      | 当前查询的订单条数                                |
+| Pageindex           | INT      | 当前请求的页码                                    |
+| Data                | []       | 订单详情                                          |
+| O_OrderNO           | string   | 订单号                                            |
+| UI_CompanyName      | string   | 到账账户企业名称                                  |
+| O_Status            | INT      | 订单状态，-1：失败，0：未支付，1：成功，2：待确认 |
+| O_Type              | INT      | 用户支付方式，1：微信，2：支付宝                  |
+| O_Money             | INT      | 交易金额                                          |
+| O_Datetime          | Datetime | 发起交易时间                                      |
+| O_TransactionNumber | string   | 交易流水号，可为空                                |
+
+成功
+
+```
+{
+	"Code": "0000",
+	"Msg": "查询成功",
+	"Data": [
+		{
+			"O_OrderNO": "37132600000036",
+			"UI_CompanyName": "天津鑫龙达物流科技有限公司",
+			"O_Status": 0,
+			"O_Type": 1,
+			"O_Money": 1,
+			"O_Datetime": "2021-07-29T16:04:34.743",
+			"O_TransactionNumber": null
+		}
+	],
+	"Count": 1,
+	"Pagesize": 20,
+	"Pageindex": 1
+}
+```
+
+失败
+
+
+
+```
+ {
+   Code = "1000",
+   Msg = "订单号重复",
+   Data = ""
+ }
+```
+
+5：H5（支付宝)
+
+网关: http://www.miduoduo668.com/#/pages/H5/alipay
+
+Method：GET
+
+请求参数
+
+Body
+
+| 参数     | 类型         | 描述                 |
+| :------- | :----------- | :------------------- |
+| username | string       | 系统分配的账号       |
+| password | string       | 密码                 |
+| orderno  | string（32） | 订单号               |
+| money    | INT          | 交易金额（单位：分） |
+
+eg：
+
+```
+http://www.miduoduo668.com/#/pages/H5/alipay?orderno=202108317000000000074&money=2&username=18553933333&password=123456
+```
+
+异步通知返回值
+
+| 参数                     | 类型     | 描述                                    |
+| :----------------------- | :------- | :-------------------------------------- |
+| Code                     | string   | 状态码，0000为成功，其他为失败          |
+| Msg                      | string   | 返回信息                                |
+| out_trade_no             | string   | 订单号                                  |
+| 以下信息，交易成功后返回 |          |                                         |
+| trade_no                 | string   | 交易流水号                              |
+| buyer_id                 | string   | 买家支付宝账号对应的支付宝唯一用户号    |
+| buyer_logon_id           | string   | 买家支付宝账号                          |
+| gmt_payment              | Datetime | 买家付款时间。格式为yyyy-MM-dd HH:mm:ss |
+
+成功
+
+```
+{
+	"Code": "0000",
+	"Msg": "交易支付成功",
+	"Data": 
+		{
+			 
+			"trade_no": "37132600000036",
+			"buyer_id": "20881165441324454",
+			"buyer_logon_id": "186****8888",
+			"gmt_payment": 2021-08-31 10:15:26
+			
+		}
+}
+```
+
+失败
+
+
+
+```
+ {
+   Code = "1000",
+   Msg = "未付款交易超时关闭",
+   Data = ""
+ }
+```
+
+6：H5（微信)
+
+网关: http://www.miduoduo668.com/#/pages/H5/wxpay
+
+Method：GET
+
+请求参数
+
+Body
+
+| 参数     | 类型         | 描述                 |
+| :------- | :----------- | :------------------- |
+| username | string       | 系统分配的账号       |
+| password | string       | 密码                 |
+| orderno  | string（32） | 订单号               |
+| money    | INT          | 交易金额（单位：分） |
+
+eg：
+
+```
+http://www.miduoduo668.com/#/pages/H5/wxpay?orderno=202108317000000000074&money=2&username=18553933333&password=123456
+```
+
+异步通知返回值
+
+| 参数           | 类型   | 描述                           |
+| :------------- | :----- | :----------------------------- |
+| Code           | string | 状态码，0000为成功，其他为失败 |
+| Msg            | string | 返回信息                       |
+| orderNo        | string | 订单号                         |
+| mch_id         | string | 商户号                         |
+| status         | string | 交易支付结果                   |
+| trade_dateTime | string | 支付时间                       |
+| fee            | string | 交易金额                       |
+| trade_type     | string | 交易类型                       |
+| transaction_id | string | 交易流水号                     |
+
+
+
+成功
+
+```
+{
+ "Code": "0000",
+ "Msg": "交易成功",
+ "Data": {
+  "mch_id": "1612527296",
+  "orderNo": "20210901234522504849",
+  "status": "SUCCESS",
+  "trade_dateTime": "20210901234554",
+  "fee": "100",
+  "trade_type": "MWEB",
+  "transaction_id": "4200001154202109016284977358",
+  "sign": "D950F96D849B953C6234C9EB7C869AE0"
+ }
+}
+```
+
+失败
+
+
+
+```
+ {
+   Code = "1000",
+   Msg = "用户取消支付",
+   "orderNo":"202108317000000000074",
+   Data = ""
+ }
+```
+
